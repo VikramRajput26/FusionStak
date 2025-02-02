@@ -1,0 +1,14 @@
+<div>
+    <h2>Enter Post ID to Delete</h2>
+    <form [formGroup]="deletePostForm" (ngSubmit)="deletePost()">
+        <div>
+            <label for="id">Post ID:</label>
+            <input id="id" formControlName="id" type="number" />
+            <div *ngIf="deletePostForm.get('id')?.invalid && deletePostForm.get('id')?.touched">
+                <small class="error-text">Post ID is required and must be a valid number!</small>
+            </div>
+        </div>
+
+        <button type="submit" [disabled]="deletePostForm.invalid">Delete Post</button>
+    </form>
+</div>

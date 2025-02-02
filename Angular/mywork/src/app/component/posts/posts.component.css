@@ -1,0 +1,34 @@
+::ng-deep .mat-table {
+  width: 100%;
+  background-color: #8cf18c !important;
+}
+
+/* Style for header cells */
+::ng-deep .mat-header-cell {
+  font-weight: bold;
+  background-color: #c2c8e8 !important;
+  color: white !important;
+}
+
+/* Style for body cells */
+::ng-deep .mat-cell {
+  color: #333 !important;
+}
+
+/* Style for table rows */
+::ng-deep .mat-row {
+  background-color: rgb(231, 117, 117) !important;
+  transition: background-color 0.3s ease;
+}
+
+/* Change row color on hover */
+::ng-deep .mat-row:hover {
+  background-color: #e48484 !important;
+}
+
+/* Style for the paginator */
+::ng-deep .mat-paginator {
+  margin-top: 10px;
+  background-color: #3c4fbc !important;
+  color: rgb(101, 173, 241) !important;
+}

@@ -1,0 +1,23 @@
+<form [formGroup]="updatePostForm" (ngSubmit)="submitPost()">
+    <div>
+        <label for="id">Post ID:</label>
+        <input id="id" formControlName="id" type="number" />
+    </div>
+
+    <div>
+        <label for="title">Title:</label>
+        <input id="title" formControlName="title" type="text" />
+    </div>
+
+    <div>
+        <label for="body">Body:</label>
+        <textarea id="body" formControlName="body"></textarea>
+    </div>
+
+    <div>
+        <label for="userId">User ID:</label>
+        <input id="userId" formControlName="userId" type="number" />
+    </div>
+
+    <button type="submit" [disabled]="updatePostForm.invalid">Update Post</button>
+</form>
