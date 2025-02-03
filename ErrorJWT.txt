@@ -1,37 +1,59 @@
-protected override void OnModelCreating(ModelBuilder modelBuilder)
-{
-    // Convert enum to string in the database
-    modelBuilder.Entity<User>()
-        .Property(u => u.UserRole)
-        .HasConversion<string>();
+To insert the given vaccine data into your Vaccines table, first, ensure that your AgeUnit enum is structured properly. Based on your data, AgeUnit can have values like Weeks, Months, Years, Pregnancy.
 
-    // Configuring User (One-to-Many) → Children (ON DELETE CASCADE)
-    modelBuilder.Entity<User>()
-        .HasMany(u => u.Children)
-        .WithOne()
-        .HasForeignKey(c => c.UserId)
-        .OnDelete(DeleteBehavior.Cascade); // Deleting a User deletes their Children
 
-    // Configuring User (One-to-Many) → Appointments (RESTRICT DELETE to prevent cascade issues)
-    modelBuilder.Entity<User>()
-        .HasMany(u => u.Appointments)
-        .WithOne(a => a.User)
-        .HasForeignKey(a => a.DoctorId)
-        .OnDelete(DeleteBehavior.Restrict);  // Prevent cascade delete from Doctor to Appointment
+---
 
-    // Configuring Child (One-to-Many) → Appointments (ON DELETE CASCADE)
-    modelBuilder.Entity<Child>()
-        .HasMany(c => c.Appointments)
-        .WithOne(a => a.Child)
-        .HasForeignKey(a => a.ChildId)
-        .OnDelete(DeleteBehavior.Cascade);  // Deleting a Child deletes their Appointments
+SQL Insert Query
 
-    // Configuring Appointment (Many-to-One) → Vaccine (RESTRICT DELETE)
-    modelBuilder.Entity<Appointment>()
-        .HasOne(a => a.Vaccine)
-        .WithMany()
-        .HasForeignKey(a => a.VaccineId)
-        .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
+INSERT INTO Vaccines (VaccineName, Description, RecommendedAge, AgeUnit, SideEffects) VALUES
+('OPV - Zero Dose', 'Oral Polio Vaccine - Zero Dose', 0, 'At Birth', NULL),
+('Hepatitis-B', 'Hepatitis B vaccine', 0, 'At Birth', NULL),
+('BCG', 'Bacillus Calmette-Guérin vaccine', 0, 'At Birth', NULL),
 
-    base.OnModelCreating(modelBuilder);
-}
+('OPV - First Dose', 'Oral Polio Vaccine - First Dose', 6, 'Weeks', NULL),
+('Rota - First Dose', 'Rotavirus Vaccine - First Dose', 6, 'Weeks', NULL),
+('Penta - First Dose', 'Pentavalent Vaccine - First Dose', 6, 'Weeks', NULL),
+('PCV - First Dose', 'Pneumococcal Conjugate Vaccine - First Dose', 6, 'Weeks', NULL),
+('IPV - First Dose', 'Inactivated Polio Vaccine - First Dose', 6, 'Weeks', NULL),
+
+('OPV - Second Dose', 'Oral Polio Vaccine - Second Dose', 10, 'Weeks', NULL),
+('Rota - Second Dose', 'Rotavirus Vaccine - Second Dose', 10, 'Weeks', NULL),
+('Penta - Second Dose', 'Pentavalent Vaccine - Second Dose', 10, 'Weeks', NULL),
+
+('OPV - Third Dose', 'Oral Polio Vaccine - Third Dose', 14, 'Weeks', NULL),
+('Rota - Third Dose', 'Rotavirus Vaccine - Third Dose', 14, 'Weeks', NULL),
+('Penta - Third Dose', 'Pentavalent Vaccine - Third Dose', 14, 'Weeks', NULL),
+('PCV - Second Dose', 'Pneumococcal Conjugate Vaccine - Second Dose', 14, 'Weeks', NULL),
+('IPV - Second Dose', 'Inactivated Polio Vaccine - Second Dose', 14, 'Weeks', NULL),
+
+('Vitamin A - First Dose', 'Vitamin A supplementation - First Dose', 9, 'Months', NULL),
+('Measles-Rubella - First Dose', 'Measles and Rubella vaccine - First Dose', 9, 'Months', NULL),
+('PCV - Booster Dose', 'Pneumococcal Conjugate Vaccine - Booster Dose', 9, 'Months', NULL),
+('IPV - Third Dose', 'Inactivated Polio Vaccine - Third Dose', 9, 'Months', NULL),
+
+('OPV - Booster Dose', 'Oral Polio Vaccine - Booster Dose', 16, 'Months', NULL),
+('Vitamin A - Second Dose', 'Vitamin A supplementation - Second Dose', 16, 'Months', NULL),
+('Measles-Rubella - Second Dose', 'Measles and Rubella vaccine - Second Dose', 16, 'Months', NULL),
+('DPT Booster - First Dose', 'Diphtheria, Pertussis, and Tetanus Booster - First Dose', 16, 'Months', NULL),
+
+('Vitamin A - Every 6 Months', 'Vitamin A supplementation for children aged 2 to 5 years', 2, 'Years', NULL),
+('DPT Booster Dose - Second', 'Diphtheria, Pertussis, and Tetanus Booster - Second Dose', 5, 'Years', NULL),
+('TD Dose', 'Tetanus and Diphtheria Toxoid - First Dose', 10, 'Years', NULL),
+('TD Dose', 'Tetanus and Diphtheria Toxoid - Second Dose', 16, 'Years', NULL),
+
+('TD - First Dose', 'Tetanus and Diphtheria Toxoid for pregnant women - First Dose', 0, 'Pregnant Women', NULL),
+('TD - Second Dose', 'Tetanus and Diphtheria Toxoid for pregnant women - Second Dose (4-6 weeks after first dose)', 0, 'Pregnant Women', NULL),
+('TD Booster Dose', 'Booster dose for pregnant women (if pregnant again within 3 years, only 1 booster dose needed)', 0, 'Pregnant Women', NULL);
+
+
+---
+
+Key Considerations:
+
+AgeUnit should be a string (varchar): Ensure the AgeUnit column stores values like 'Weeks', 'Months', 'Years', 'Pregnant Women'.
+
+RecommendedAge for pregnancy is set to 0 because it's not an exact age but rather a condition.
+
+
+Let me know if you need any modifications!
+
