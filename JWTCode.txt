@@ -1,41 +1,41 @@
-import { Component } from '@angular/core';
+import { Component, Signal, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { SignUpRequest } from '../../auth/auth.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-sign-up',
+  standalone: true,
   templateUrl: './sign-up.component.html',
   styleUrls: ['./sign-up.component.css'],
-  standalone: true,
-  imports: [ReactiveFormsModule],  
+  imports: [ReactiveFormsModule, CommonModule],
 })
 export class SignUpComponent {
-  signUpForm: FormGroup;
+  private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
+  private toastr = inject(ToastrService);
+  private router = inject(Router);
 
-  constructor(
-    private fb: FormBuilder,
-    private authService: AuthService,
-    private toastr: ToastrService,
-    private router: Router
-  ) {
-    this.signUpForm = this.fb.group({
-      firstName: ['', Validators.required],
-      lastName: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]],
-      userRole: ['USER', Validators.required],  // Correct field for backend
-      contactNumber: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
-    }, {
-      validators: this.passwordMatchValidator
-    });
-  }
+  signUpForm: Signal<FormGroup> = signal(
+    this.fb.group(
+      {
+        firstName: ['', Validators.required],
+        lastName: ['', Validators.required],
+        email: ['', [Validators.required, Validators.email]],
+        password: ['', [Validators.required, Validators.minLength(6)]],
+        confirmPassword: ['', Validators.required],
+        userRole: ['USER', Validators.required],
+        contactNumber: ['', [Validators.required, Validators.pattern('^[0-9]{10}$')]],
+      },
+      { validators: this.passwordMatchValidator }
+    )
+  );
 
-  // Custom validator to match passwords
-  passwordMatchValidator(form: FormGroup) {
+  // Custom validator to check password matching
+  private passwordMatchValidator(form: FormGroup) {
     const password = form.get('password')?.value;
     const confirmPassword = form.get('confirmPassword')?.value;
     return password === confirmPassword ? null : { mismatch: true };
@@ -43,29 +43,31 @@ export class SignUpComponent {
 
   // Method to handle form submission
   submitSignUp(): void {
-    if (this.signUpForm.invalid) {
+    if (this.signUpForm().invalid) {
       this.toastr.error('Please fill all fields correctly!', 'Error');
       return;
     }
 
-    const signUpRequest: SignUpRequest = this.signUpForm.value;
+    const signUpRequest: SignUpRequest = this.signUpForm().value;
 
-    // Call AuthService signUp method
-    this.authService.signUp(signUpRequest).subscribe(
-      (response) => {
+    this.authService.signUp(signUpRequest).subscribe({
+      next: () => {
         this.toastr.success('Successfully Registered!', 'Success');
-        this.router.navigate(['/login']); // Redirect to login page after successful registration
+        this.router.navigate(['/login']);
       },
-      (error) => {
+      error: (error) => {
         this.toastr.error('Registration failed: ' + error.message, 'Error');
-      }
-    );
+      },
+    });
   }
 }
 
+
+
+
 <div class="container mt-5">
   <h2>Sign Up</h2>
-  <form [formGroup]="signUpForm" (ngSubmit)="submitSignUp()">
+  <form [formGroup]="signUpForm()" (ngSubmit)="submitSignUp()">
     <div class="form-group">
       <label for="signUpFirstName">First Name</label>
       <input id="signUpFirstName" formControlName="firstName" class="form-control" />
@@ -104,13 +106,14 @@ export class SignUpComponent {
       <input id="signUpContactNumber" formControlName="contactNumber" class="form-control" />
     </div>
 
-    <button type="submit" class="btn btn-primary mt-3" [disabled]="signUpForm.invalid">Sign Up</button>
+    <button type="submit" class="btn btn-primary mt-3" [disabled]="signUpForm().invalid">Sign Up</button>
   </form>
 </div>
 
 
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environment/environment';
 import { SignUpRequest, SignInRequest, LoginResponse } from './auth.model';
@@ -119,9 +122,8 @@ import { SignUpRequest, SignInRequest, LoginResponse } from './auth.model';
   providedIn: 'root',
 })
 export class AuthService {
+  private http = inject(HttpClient);
   private apiUrl = environment.apiUrl;
-
-  constructor(private http: HttpClient) {}
 
   signUp(user: SignUpRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/Auth/addUser`, user);
@@ -144,3 +146,24 @@ export class AuthService {
   }
 }
 
+
+
+
+export interface SignUpRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  userRole: 'USER' | 'ADMIN';
+  contactNumber: string;
+}
+
+export interface SignInRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+}
