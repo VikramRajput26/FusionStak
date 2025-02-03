@@ -1,0 +1,44 @@
+<div class="container mt-5">
+  <h2>Sign Up</h2>
+  <form [formGroup]="signUpForm" (ngSubmit)="submitSignUp()">
+    <div class="form-group">
+      <label for="signUpFirstName">First Name</label>
+      <input id="signUpFirstName" formControlName="firstName" class="form-control" />
+    </div>
+
+    <div class="form-group">
+      <label for="signUpLastName">Last Name</label>
+      <input id="signUpLastName" formControlName="lastName" class="form-control" />
+    </div>
+
+    <div class="form-group">
+      <label for="signUpEmail">Email</label>
+      <input id="signUpEmail" formControlName="email" type="email" class="form-control" />
+    </div>
+
+    <div class="form-group">
+      <label for="signUpPassword">Password</label>
+      <input id="signUpPassword" formControlName="password" type="password" class="form-control" />
+    </div>
+
+    <div class="form-group">
+      <label for="signUpConfirmPassword">Confirm Password</label>
+      <input id="signUpConfirmPassword" formControlName="confirmPassword" type="password" class="form-control" />
+    </div>
+
+    <div class="form-group">
+      <label for="signUpRole">Role</label>
+      <select id="signUpRole" formControlName="userRole" class="form-control">
+        <option value="USER">USER</option>
+        <option value="ADMIN">ADMIN</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="signUpContactNumber">Contact Number</label>
+      <input id="signUpContactNumber" formControlName="contactNumber" class="form-control" />
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3" [disabled]="signUpForm.invalid">Sign Up</button>
+  </form>
+</div>
