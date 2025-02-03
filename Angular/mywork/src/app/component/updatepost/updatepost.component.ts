@@ -51,7 +51,7 @@ export class UpdatePostComponent {
 
     // Sending PUT request to update the post
     this.http
-      .put(
+      .put<PostData>(
         `https://jsonplaceholder.typicode.com/posts/${postData.id}`,
         postData
       )
