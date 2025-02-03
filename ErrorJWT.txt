@@ -1,188 +1,37 @@
-Error Number:1785,State:0,Class:16
-Introducing FOREIGN KEY constraint 'FK_Appointments_Users_DoctorId' on table 'Appointments' may cause cycles or multiple cascade paths. Specify ON DELETE NO ACTION or ON UPDATE NO ACTION, or modify other FOREIGN KEY constraints.
-Could not create constraint or index. See previous errors.Failed executing DbCommand (14ms) [Parameters=[], CommandType='Text', CommandTimeout='30']
-CREATE TABLE [Appointments] (
-    [AppointmentId] int NOT NULL IDENTITY,
-    [Reason] nvarchar(100) NOT NULL,
-    [Status] nvarchar(20) NOT NULL,
-    [ChildId] int NOT NULL,
-    [DoctorId] int NOT NULL,
-    [VaccineId] int NOT NULL,
-    [AppointmentDate] datetime2 NOT NULL,
-    [AppointmentTime] nvarchar(max) NOT NULL,
-    CONSTRAINT [PK_Appointments] PRIMARY KEY ([AppointmentId]),
-    CONSTRAINT [FK_Appointments_Children_ChildId] FOREIGN KEY ([ChildId]) REFERENCES [Children] ([ChildId]) ON DELETE CASCADE,
-    CONSTRAINT [FK_Appointments_Users_DoctorId] FOREIGN KEY ([DoctorId]) REFERENCES [Users] ([UserId]) ON DELETE CASCADE,
-    CONSTRAINT [FK_Appointments_Vaccines_VaccineId] FOREIGN KEY ([VaccineId]) REFERENCES [Vaccines] ([VaccineId]) ON DELETE NO ACTION
-);using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-using System.Collections.Generic;
-using Microsoft.EntityFrameworkCore;
-
-namespace MyProjectJWT.Models
-{
-    [Index(nameof(Email), IsUnique = true)]  // Adding unique constraint on Email
-    public class User
-    {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int UserId { get; set; }
-
-        [Required(ErrorMessage = "First Name is Mandatory!!!")]
-        [MaxLength(50)]
-        public string FirstName { get; set; }
-
-        [Required(ErrorMessage = "Last Name is Mandatory!!!")]
-        [MaxLength(50)]
-        public string LastName { get; set; }
-
-        [Required(ErrorMessage = "Email is Mandatory!!!")]
-        [EmailAddress(ErrorMessage = "Email format is Invalid!!!")]
-        [MaxLength(100)]
-        public string Email { get; set; }
-
-        [Required(ErrorMessage = "Password is Mandatory!!!")]
-        [MinLength(3)]
-        public string Password { get; set; }
-
-        [Required(ErrorMessage = "Contact Number is Mandatory!!!")]
-        [RegularExpression(@"^\d{10}$", ErrorMessage = "Contact Number should be 10 digits")]
-        [MaxLength(10)]
-        public string ContactNumber { get; set; }
-
-        [Required]
-        public Role UserRole { get; set; }
-
-        // Navigation property for related Children
-        public ICollection<Child> Children { get; set; } = new List<Child>();
-
-        // Navigation property for related Appointments
-        public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
-    }
-}using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace MyProjectJWT.Models
-{
-    [Table("Appointments")]
-    public class Appointment
-    {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int AppointmentId { get; set; }
-
-        [Required]
-        [MaxLength(100)] // Adjust length as needed
-        public string Reason { get; set; }
-
-        [Required]
-        [MaxLength(20)] // Adjust length as needed
-        public string Status { get; set; }
-
-        // Foreign key for Child
-        [Required]
-        [ForeignKey(nameof(Child))]
-        public int ChildId { get; set; }
-
-        public Child Child { get; set; }
-
-        // Foreign key for User (Doctor)
-        [Required]
-        [ForeignKey(nameof(User))]
-        public int DoctorId { get; set; }
-
-        public User User { get; set; }
-
-        // Foreign key for Vaccines
-        [Required]
-        [ForeignKey(nameof(Vaccine))]
-        public int VaccineId { get; set; }
-
-        public Vaccines Vaccine { get; set; }
-
-        // Date of the appointment
-        public DateTime AppointmentDate { get; set; }
-
-        // Time of the appointment
-        [Required]
-        public string AppointmentTime { get; set; }
-    }
-}using System.ComponentModel.DataAnnotations.Schema;
-using System.ComponentModel.DataAnnotations;
-using System.Collections.Generic;
-
-namespace MyProjectJWT.Models
-{
-    public class Child
-    {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int ChildId { get; set; }
-
-        [Required]
-        [MaxLength(50)]
-        public string FirstName { get; set; }
-
-        [Required]
-        [MaxLength(50)]
-        public string LastName { get; set; }
-
-        [MaxLength(3)]
-        public string BloodType { get; set; }
-
-        [Required]
-        [Column(TypeName = "varchar(10)")]
-        public Gender Gender { get; set; }
-
-        [Required]
-        public DateTime DateOfBirth { get; set; }
-
-        // Foreign key to the parent User
-        [Required]
-        [ForeignKey(nameof(UserId))]
-        public int UserId { get; set; }
-
-        // Navigation property for related Appointments
-        public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
-    }
-}
-
-
 protected override void OnModelCreating(ModelBuilder modelBuilder)
 {
-    // Define the enum configuration for UserRole
+    // Convert enum to string in the database
     modelBuilder.Entity<User>()
         .Property(u => u.UserRole)
         .HasConversion<string>();
 
-    // Configuring the relationship between User and Child (One-to-Many)
+    // Configuring User (One-to-Many) → Children (ON DELETE CASCADE)
     modelBuilder.Entity<User>()
         .HasMany(u => u.Children)
         .WithOne()
         .HasForeignKey(c => c.UserId)
-        .OnDelete(DeleteBehavior.Cascade);  // Deleting a User will delete their Children
+        .OnDelete(DeleteBehavior.Cascade); // Deleting a User deletes their Children
 
-    // Configuring the relationship between User and Appointment (One-to-Many)
+    // Configuring User (One-to-Many) → Appointments (RESTRICT DELETE to prevent cascade issues)
     modelBuilder.Entity<User>()
         .HasMany(u => u.Appointments)
         .WithOne(a => a.User)
         .HasForeignKey(a => a.DoctorId)
-        .OnDelete(DeleteBehavior.Restrict);  // Prevent cascading delete from User to Appointment
+        .OnDelete(DeleteBehavior.Restrict);  // Prevent cascade delete from Doctor to Appointment
 
-    // Configuring the relationship between Child and Appointment (One-to-Many)
+    // Configuring Child (One-to-Many) → Appointments (ON DELETE CASCADE)
     modelBuilder.Entity<Child>()
         .HasMany(c => c.Appointments)
         .WithOne(a => a.Child)
         .HasForeignKey(a => a.ChildId)
-        .OnDelete(DeleteBehavior.Cascade);  // Deleting a Child will delete their Appointments
+        .OnDelete(DeleteBehavior.Cascade);  // Deleting a Child deletes their Appointments
 
-    // Configuring the relationship between Appointment and Vaccine (Many-to-One)
+    // Configuring Appointment (Many-to-One) → Vaccine (RESTRICT DELETE)
     modelBuilder.Entity<Appointment>()
         .HasOne(a => a.Vaccine)
         .WithMany()
         .HasForeignKey(a => a.VaccineId)
-        .OnDelete(DeleteBehavior.Restrict); // Deleting an Appointment should not affect the Vaccine
+        .OnDelete(DeleteBehavior.Restrict); // Prevent cascade delete
 
     base.OnModelCreating(modelBuilder);
 }
