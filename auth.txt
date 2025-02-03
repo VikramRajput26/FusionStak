@@ -1,0 +1,617 @@
+using Microsoft.AspNetCore.Mvc;
+using MyProjectJWT.DTO;
+using MyProjectJWT.Interfaces;
+using MyProjectJWT.Models;
+using System;
+
+namespace MyProjectJWT.Controllers
+{
+    [Route("api/[controller]")]
+    [ApiController]
+    public class AuthController : ControllerBase
+    {
+        private readonly IAuthService _auth;
+
+        public AuthController(IAuthService auth)
+        {
+            _auth = auth;
+        }
+
+        [HttpPost("login")]
+        public ActionResult<LoginResponse> Login([FromBody] LoginRequest obj)
+        {
+            try
+            {
+                var response = _auth.Login(obj);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+   
+
+        [HttpPost("addUser")]
+        public IActionResult AddUser([FromBody] CreateUserDTO userDto)
+        {
+            if (userDto == null)
+                return BadRequest("User data is null.");
+
+            try
+            {
+                var addedUser = _auth.AddUser(userDto);
+                return CreatedAtAction(nameof(GetUserById), new { id = addedUser.UserId }, addedUser);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+      
+
+        [HttpGet("getUserById/{id}")]
+        public IActionResult GetUserById(int id)
+        {
+            try
+            {
+                var user = _auth.GetUserById(id);
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+        [HttpGet("getAllUsers")]
+        public IActionResult GetAllUsers()
+        {
+            try
+            {
+                var users = _auth.GetAllUsers();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpGet("getAllDoctors")]
+        public IActionResult AdminDoctor()
+        {
+            try
+            {
+                var users = _auth.AdminDoctors();
+                return Ok(users);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        [HttpPut("updateUser/{id}")]
+        public IActionResult UpdateUser(int id, [FromBody] UpdateUserDTO userDto)
+        {
+            if (userDto == null || userDto.UserId != id)
+                return BadRequest("Invalid UserId or data is null.");
+
+            try
+            {
+                var updatedUser = _auth.UpdateUser(id, userDto);
+                return Ok(updatedUser);
+            }
+            catch (Exception ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
+
+
+        [HttpDelete("deleteUser/{id}")]
+        public IActionResult DeleteUser(int id)
+        {
+            try
+            {
+                var success = _auth.DeleteUser(id);
+                return success ? NoContent() : NotFound("User not found.");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+     
+
+    }
+}
+using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.IdentityModel.Tokens;
+using MyProjectJWT.Context;
+using MyProjectJWT.Interfaces;
+using MyProjectJWT.Models;
+using MyProjectJWT.DTO;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using Microsoft.Extensions.Configuration;
+using System.Linq;
+using Dapper;
+using Microsoft.Data.SqlClient;
+using System.Data;
+
+namespace MyProjectJWT.Services
+{
+    public class AuthService : IAuthService
+    {
+        private readonly JwtContext _context;
+        private readonly IConfiguration _configuration;
+        private readonly EmailService _emailService;
+        private readonly string _connectionString;
+
+        public AuthService(JwtContext context, IConfiguration configuration, EmailService emailService)
+        {
+            _context = context;
+            _configuration = configuration;
+            _emailService = emailService;
+            _connectionString = _configuration.GetConnectionString("Database");
+        }
+
+        public UserDTO AddUser(CreateUserDTO userDto)
+        {
+            if (userDto == null)
+                throw new ArgumentNullException(nameof(userDto));
+
+            // Check if a user with the same email already exists
+            var existingUser = _context.Users
+                .FirstOrDefault(u => u.Email == userDto.Email);
+
+            if (existingUser != null)
+            {
+                throw new InvalidOperationException("A user with this email already exists.");
+            }
+
+            // Hash the password
+            var hashedPassword = HashPassword(userDto.Password);
+
+            // Call the stored procedure to add the user
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Define the input parameters
+                var parameters = new DynamicParameters();
+                parameters.Add("UserFirstName", userDto.FirstName);
+                parameters.Add("UserLastName", userDto.LastName);
+                parameters.Add("UserEmail", userDto.Email);
+                parameters.Add("UserPassword", hashedPassword);
+                parameters.Add("UserContact", userDto.ContactNumber);
+                parameters.Add("UserRole", userDto.UserRole.ToString());
+
+                // Define the output parameter
+                parameters.Add("@UserId", dbType: DbType.Int32, direction: ParameterDirection.Output);
+
+                // Call the stored procedure with both input and output parameters
+                connection.Execute("AddUsers", parameters, commandType: CommandType.StoredProcedure);
+
+                // Retrieve the UserId from the output parameter
+                var newUserId = parameters.Get<int>("@UserId");
+
+                // Send registration success email
+                string subject = "Registration Successful";
+                string body = $"Hello {userDto.FirstName},<br/><br/>" +
+                              "Thank you for registering. Your registration was successful!<br/><br/>" +
+                              "Best regards,<br/>The Team";
+                _emailService.SendEmail(userDto.Email, subject, body);
+
+                // Convert the user entity to a UserDTO and return it
+                return new UserDTO
+                {
+                    UserId = newUserId, // Use the newly generated UserId
+                    FirstName = userDto.FirstName,
+                    LastName = userDto.LastName,
+                    Email = userDto.Email,
+                    ContactNumber = userDto.ContactNumber,
+                    UserRole = userDto.UserRole
+                };
+            }
+        }
+
+
+
+
+        public UserDTO GetUserById(int id)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Define the input parameter
+                var parameters = new DynamicParameters();
+                parameters.Add("@User_Id", id);
+
+                // Call the stored procedure to get the user by ID
+                var user = connection.QuerySingleOrDefault<UserDTO>("GetUserById", parameters, commandType: CommandType.StoredProcedure);
+
+                if (user == null)
+                    throw new Exception("User not found");
+
+                return user;
+            }
+        }
+
+
+        public IEnumerable<UserDTO> GetAllUsers()
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Call the stored procedure to get all users
+                var users = connection.Query<UserDTO>("GetAllUsers", commandType: CommandType.StoredProcedure);
+
+                return users.ToList();
+            }
+        }
+
+
+        public UserDTO UpdateUser(int id, UpdateUserDTO userDto)
+        {
+            if (userDto == null)
+                throw new ArgumentNullException(nameof(userDto));
+
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Hash the password if it's provided in the update request
+                string hashedPassword = null;
+                if (!string.IsNullOrEmpty(userDto.Password))
+                {
+                    hashedPassword = HashPassword(userDto.Password);
+                }
+
+                // Define the input parameters
+                var parameters = new DynamicParameters();
+                parameters.Add("NewUserId", id); // Ensure you're passing the correct UserId to update
+                parameters.Add("UserFirstName", userDto.FirstName);
+                parameters.Add("UserLastName", userDto.LastName);
+                parameters.Add("UserEmail", userDto.Email);
+                parameters.Add("UserPassword", hashedPassword ?? (object)DBNull.Value); // Use existing password if not updating
+                parameters.Add("UserContact", userDto.ContactNumber);
+                parameters.Add("UserRole", userDto.UserRole.ToString());
+
+                // Call the stored procedure to update the user
+                connection.Execute("UpdateUser", parameters, commandType: CommandType.StoredProcedure);
+
+                // Fetch the updated user to return
+                var updatedUser = GetUserById(id);
+
+                return updatedUser;
+            }
+        }
+
+
+
+        public bool DeleteUser(int id)
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+
+                // Define the input parameter
+                var parameters = new DynamicParameters();
+                parameters.Add("@User_Id", id);
+
+                // Call the stored procedure to delete the user
+                connection.Execute("DeleteUser", parameters, commandType: CommandType.StoredProcedure);
+
+                return true;
+            }
+        }
+
+
+        public LoginResponse Login(LoginRequest loginRequest)
+        {
+            if (loginRequest == null)
+                throw new ArgumentNullException(nameof(loginRequest));
+
+            if (string.IsNullOrEmpty(loginRequest.Username) || string.IsNullOrEmpty(loginRequest.Password))
+                throw new Exception("Credentials are not valid");
+
+            var user = _context.Users.SingleOrDefault(s => s.Email == loginRequest.Username);
+            if (user == null || !VerifyPassword(user.Password, loginRequest.Password))
+                throw new Exception("Invalid credentials");
+
+            var claims = new List<Claim>
+            {
+                new Claim(JwtRegisteredClaimNames.Sub, _configuration["Jwt:Subject"]),
+                new Claim("UserId", user.UserId.ToString()),
+                new Claim("UserName", $"{user.FirstName} {user.LastName}"),
+                new Claim(ClaimTypes.Role, user.UserRole.ToString())
+            };
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
+            var signIn = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var token = new JwtSecurityToken(
+                _configuration["Jwt:Issuer"],
+                _configuration["Jwt:Audience"],
+                claims,
+                expires: DateTime.UtcNow.AddMinutes(10),
+                signingCredentials: signIn
+            );
+
+            return new LoginResponse
+            {
+                Token = new JwtSecurityTokenHandler().WriteToken(token),
+                UserId = user.UserId
+            };
+        }
+
+        private static string HashPassword(string password)
+        {
+            var salt = new byte[128 / 8];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(salt);
+            }
+            var hashed = KeyDerivation.Pbkdf2(
+                password: password,
+                salt: salt,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 10000,
+                numBytesRequested: 256 / 8
+            );
+
+            return $"{Convert.ToBase64String(salt)}.{Convert.ToBase64String(hashed)}";
+        }
+
+        private static bool VerifyPassword(string storedPassword, string providedPassword)
+        {
+            var parts = storedPassword.Split('.');
+            if (parts.Length != 2)
+                throw new InvalidOperationException("Invalid password format");
+
+            var storedSalt = Convert.FromBase64String(parts[0]);
+            var storedHash = Convert.FromBase64String(parts[1]);
+
+            var providedHash = KeyDerivation.Pbkdf2(
+                password: providedPassword,
+                salt: storedSalt,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 10000,
+                numBytesRequested: 256 / 8
+            );
+
+            return providedHash.SequenceEqual(storedHash);
+        }
+
+        public IEnumerable<AdminDTO> AdminDoctors()
+        {
+            using (var connection = new SqlConnection(_connectionString))
+            {
+                connection.Open();
+                 var users = connection.Query<AdminDTO>("AdminDoctor", commandType: CommandType.StoredProcedure);
+
+                return users.ToList();
+            }
+        }
+    }
+}
+using MyProjectJWT.Models;
+
+namespace MyProjectJWT.DTO
+{
+    public class CreateUserDTO
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Email { get; set; }
+        public string Password { get; set; }
+        public string ContactNumber { get; set; }
+        public Role UserRole { get; set; }
+    }
+}
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+
+namespace MyProjectJWT.Models
+{
+    [Index(nameof(Email), IsUnique = true)]  // Adding unique constraint on Email
+    public class User
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int UserId { get; set; }
+
+        [Required(ErrorMessage = "First Name is Mandatory!!!")]
+        [MaxLength(50)]
+        public string FirstName { get; set; }
+
+        [Required(ErrorMessage = "Last Name is Mandatory!!!")]
+        [MaxLength(50)]
+        public string LastName { get; set; }
+
+        [Required(ErrorMessage = "Email is Mandatory!!!")]
+        [EmailAddress(ErrorMessage = "Email format is Invalid!!!")]
+        [MaxLength(100)]
+        public string Email { get; set; }
+
+        [Required(ErrorMessage = "Password is Mandatory!!!")]
+        [MinLength(3)]
+        public string Password { get; set; }
+
+        [Required(ErrorMessage = "Contact Number is Mandatory!!!")]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "Contact Number should be 10 digits")]
+        [MaxLength(10)]
+        public string ContactNumber { get; set; }
+
+        [Required]
+        public Role UserRole { get; set; }
+
+        // Navigation property for related Children
+        public ICollection<Child> Children { get; set; } = new List<Child>();
+
+        // Navigation property for related Appointments
+        public ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+    }
+}
+using MyProjectJWT.Context;
+using MyProjectJWT.Interfaces;
+using MyProjectJWT.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+
+using System.Text;
+using System.Text.Json.Serialization;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddDbContext<JwtContext>
+    (options => options.UseSqlServer(builder.Configuration.GetConnectionString("Database")));
+builder.Services.AddTransient<IAuthService, AuthService>();
+builder.Services.AddTransient<IChildService, ChildService>();
+builder.Services.AddTransient<IVaccineService, VaccineService>();
+builder.Services.AddTransient<IAppointmentService, AppointmentService>();
+builder.Services.AddScoped<EmailService>();
+
+builder.Services.AddControllers();
+
+// Add CORS services
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        builder => builder
+            .WithOrigins("http://localhost:4200") // Frontend URL
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+});
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters()
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    };
+});
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
+builder.Services.AddAuthorization(options =>
+{
+    options.DefaultPolicy = new AuthorizationPolicyBuilder(
+        JwtBearerDefaults.AuthenticationScheme)
+            .RequireAuthenticatedUser()
+            .Build();
+});
+
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(opt =>
+{
+    opt.SwaggerDoc("v1", new OpenApiInfo { Title = "MyAPI", Version = "v1" });
+    opt.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Please enter token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        BearerFormat = "JWT",
+        Scheme = "bearer"
+    });
+
+    opt.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type=ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+});
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+
+// Use CORS policy
+app.UseCors("AllowFrontend");
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllers();
+
+app.Run();using System.Net.Mail;
+using System.Net;
+
+namespace MyProjectJWT.Services
+{
+    public class EmailService
+    {
+        private readonly IConfiguration _configuration;
+
+        public EmailService(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
+
+        public void SendEmail(string toEmail, string subject, string body)
+        {
+            var smtpClient = new SmtpClient(_configuration["SMTPConfig:Host"])
+            {
+                Port = int.Parse(_configuration["SMTPConfig:Port"]),
+                Credentials = new NetworkCredential(_configuration["SMTPConfig:UserName"], _configuration["SMTPConfig:Password"]),
+                EnableSsl = bool.Parse(_configuration["SMTPConfig:EnableSSL"]),
+            };
+
+            var mailMessage = new MailMessage
+            {
+                From = new MailAddress(_configuration["SMTPConfig:SenderAddress"], _configuration["SMTPConfig:SenderDisplayName"]),
+                Subject = subject,
+                Body = body,
+                IsBodyHtml = bool.Parse(_configuration["SMTPConfig:IsBodyHTML"]),
+            };
+
+            mailMessage.To.Add(toEmail);
+
+            smtpClient.Send(mailMessage);
+        }
+
+
+    }
+}
