@@ -1,0 +1,66 @@
+/* Center the entire container */
+.not-found-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; /* Stack image and text vertically */
+    height: 80vh; /* Take full height of the viewport */
+    background-color: #f8f8f8; /* Optional: light background */
+    text-align: center; /* Center the text */
+    padding: 20px; /* Padding for better layout */
+    animation: fadeIn 1ms ease-in-out;
+  }
+  
+  /* Style the image */
+  .not-found-image {
+    width: 80%; /* Decrease width to 50% of its container */
+    height: auto; /* Maintain aspect ratio */
+    max-width: 400px;/* Maintain aspect ratio */
+    border-radius: 10px; /* Optional: add rounded corners to the image */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Optional: add subtle shadow */
+   
+  }
+  
+  /* Add a heading style */
+  .not-found-text {
+    font-size: 2.5rem; /* Large font size for emphasis */
+    color: #333; /* Darker text color */
+    margin-top: 20px; /* Space between the image and the text */
+    font-weight: bold;
+    animation: fadeInText 2s ease-in-out;
+  }
+  
+  /* Fade-in animation for the container */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  
+  /* Zoom-in animation for the image */
+  @keyframes zoomIn {
+    from {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  /* Fade-in animation for text */
+  @keyframes fadeInText {
+    from {
+      opacity: 0;
+      transform: translateY(20px); /* Start the text from a lower position */
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0); /* End with text in normal position */
+    }
+  }
+  

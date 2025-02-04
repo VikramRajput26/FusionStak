@@ -1,0 +1,95 @@
+<!-- appointment.component.html -->
+<div class="container mt-5">
+  <h2>Appointment Registration</h2>
+  <form [formGroup]="appointmentForm" (ngSubmit)="submitAppointment()">
+    
+    <!-- First Row (Reason and Status Fields) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Reason</mat-label>
+          <mat-select formControlName="reason">
+            <mat-option *ngFor="let reason of reasons" [value]="reason">
+              {{ reason }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Choose the reason for the appointment</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option *ngFor="let status of appointmentStatuses" [value]="status">
+              {{ status }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Choose the status of the appointment</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Second Row (Child ID and Doctor ID Fields) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Child ID</mat-label>
+          <input matInput formControlName="childId" type="number" />
+          <mat-hint>Enter the child ID</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Doctor ID</mat-label>
+          <input matInput formControlName="doctorId" type="number" />
+          <mat-hint>Enter the doctor ID</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Third Row (Vaccine ID Field) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Vaccine ID</mat-label>
+          <input matInput formControlName="vaccineId" type="number" />
+          <mat-hint>Enter the vaccine ID</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Fourth Row (Date and Time Fields) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Appointment Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="appointmentDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-hint>MM/DD/YYYY</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Appointment Time</mat-label>
+          <mat-select formControlName="appointmentTime">
+            <mat-option *ngFor="let time of timeSlots" [value]="time">
+              {{ time }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="apt-button">
+      <button type="submit" type="button" class="btn btn-primary" [disabled]="appointmentForm.invalid">
+        Create Appointment
+      </button>
+    </div>
+    
+  </form>
+</div>

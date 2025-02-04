@@ -1,0 +1,52 @@
+/* General margin and padding adjustments for form fields */
+.form-group {
+    margin-bottom: 20px; /* Adds space between form fields */
+  }
+  
+  /* Flexbox container to display the fields in two columns per row */
+  .form-row {
+    display: flex; /* Apply flexbox */
+    gap: 20px; /* Space between fields */
+    margin-bottom: 20px; /* Adds space below each row */
+  }
+  
+  /* Flex items (each form field) will take equal width */
+  .flex-item {
+    flex: 1; /* Makes each field take equal space */
+  }
+  
+  /* Styling adjustments for labels and inputs */
+  mat-form-field {
+    width: 100%; /* Ensure full width for each field */
+  }
+  
+  /* Styling for the button with increased specificity to override Bootstrap styles */
+  button {
+    margin-top: 20px;
+    margin-bottom: 80px; 
+    font-size: 18px; /* Increase font size */
+    padding: 12px 24px; /* Increase padding for a bigger button */
+    width: auto; /* Adjust width if you want it to take full width, or leave it as is */
+  }
+  
+  /* Additional styling for the hover state (optional) */
+  button.btn.btn-primary:hover {
+    background-color: rgb(0, 55, 210) !important; /* Slightly darker shade on hover */
+    border-color: rgb(0, 55, 210) !important;
+  }
+  
+  .apt-button {
+    margin-top: auto; /* Pushes the button to the bottom */
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px; 
+  }
+  
+  .container {
+    width: 100%; /* Adjust to 100% for full width, or set a fixed width like '900px' */
+    max-width: 900px; /* Set max-width to limit the form size */
+    margin: 0 auto; /* Center the form */
+    padding: 20px; 
+    height: auto; /* Adjust height if needed, e.g., 80vh for 80% of the viewport height */
+  }
+  
