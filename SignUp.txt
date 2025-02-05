@@ -1,148 +1,187 @@
-<div class="container mt-5">
+<div class="container">
   <h2>Sign Up</h2>
+
   <form [formGroup]="signUpForm" (ngSubmit)="submitSignUp()">
-    
-    <!-- First Name and Last Name (Two fields in one row) -->
-    <div class="form-row">
-      <div class="flex-item">
-        <mat-form-field appearance="fill" class="example-full-width">
+    <mat-grid-list cols="2" rowHeight="auto" gutterSize="20px">
+      <!-- First Name -->
+      <mat-grid-tile>
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>First Name</mat-label>
           <input matInput formControlName="firstName" />
-          <mat-error *ngIf="signUpForm.get('firstName')?.invalid">First name is required</mat-error>
+          <mat-error *ngIf="signUpForm.get('firstName')?.invalid">
+            First name is required
+          </mat-error>
         </mat-form-field>
-      </div>
-      <div class="flex-item">
-        <mat-form-field appearance="fill" class="example-full-width">
+      </mat-grid-tile>
+
+      <!-- Last Name -->
+      <mat-grid-tile>
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>Last Name</mat-label>
           <input matInput formControlName="lastName" />
-          <mat-error *ngIf="signUpForm.get('lastName')?.invalid">Last name is required</mat-error>
+          <mat-error *ngIf="signUpForm.get('lastName')?.invalid">
+            Last name is required
+          </mat-error>
         </mat-form-field>
-      </div>
-    </div>
+      </mat-grid-tile>
 
-    <div class="form-row">
-      <div class="flex-item">
-        <mat-form-field appearance="fill" class="example-full-width">
+      <!-- Email -->
+      <mat-grid-tile>
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>Email</mat-label>
           <input matInput formControlName="email" type="email" />
-          <mat-error *ngIf="signUpForm.get('email')?.invalid">Enter a valid email address</mat-error>
+          <mat-error *ngIf="signUpForm.get('email')?.invalid">
+            Enter a valid email address
+          </mat-error>
         </mat-form-field>
-      </div>
+      </mat-grid-tile>
 
-      <div class="flex-item">
-        <!-- Role Field -->
-        <mat-form-field appearance="fill" class="example-full-width">
+      <!-- Role -->
+      <mat-grid-tile>
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>Role</mat-label>
           <mat-select formControlName="userRole">
             <mat-option value="USER">USER</mat-option>
             <mat-option value="ADMIN">ADMIN</mat-option>
           </mat-select>
-          <mat-error *ngIf="signUpForm.get('userRole')?.invalid">Role is required</mat-error>
+          <mat-error *ngIf="signUpForm.get('userRole')?.invalid">
+            Role is required
+          </mat-error>
         </mat-form-field>
-      </div>
-    </div>
+      </mat-grid-tile>
 
-    <div class="form-row">
-      <div class="flex-item">
-        <!-- Confirm Password Field -->
-        <mat-form-field appearance="fill" class="example-full-width">
-          <mat-label>Confirm Password</mat-label>
-          <input matInput formControlName="confirmPassword" [type]="hidePassword ? 'password' : 'text'" />
-          <button mat-icon-button matSuffix (click)="togglePasswordVisibility()">
-            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          <mat-error *ngIf="signUpForm.get('confirmPassword')?.invalid">Passwords must match</mat-error>
-        </mat-form-field>
-      </div>
-
-      <div class="flex-item">
-        <!-- Password Field -->
-        <mat-form-field appearance="fill" class="example-full-width">
+      <!-- Password -->
+      <mat-grid-tile>
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>Password</mat-label>
-          <input matInput formControlName="password" [type]="hidePassword ? 'password' : 'text'" />
+          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="password" />
           <button mat-icon-button matSuffix (click)="togglePasswordVisibility()">
             <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
           </button>
-          <mat-error *ngIf="signUpForm.get('password')?.invalid">Password is required and must be at least 3 characters</mat-error>
+          <mat-error *ngIf="signUpForm.get('password')?.invalid">
+            Password is required (min 6 characters)
+          </mat-error>
         </mat-form-field>
-      </div>
-    </div>
+      </mat-grid-tile>
 
-    <div class="form-row">
-      <div class="flex-item">
-        <!-- Contact Number Field -->
-        <mat-form-field appearance="fill" class="example-full-width">
+      <!-- Confirm Password -->
+      <mat-grid-tile>
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Confirm Password</mat-label>
+          <input matInput [type]="hidePassword ? 'password' : 'text'" formControlName="confirmPassword" />
+          <button mat-icon-button matSuffix (click)="togglePasswordVisibility()">
+            <mat-icon>{{ hidePassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="signUpForm.get('confirmPassword')?.invalid">
+            Passwords must match
+          </mat-error>
+        </mat-form-field>
+      </mat-grid-tile>
+
+      <!-- Contact Number -->
+      <mat-grid-tile>
+        <mat-form-field appearance="outline" class="full-width">
           <mat-label>Contact Number</mat-label>
           <input matInput formControlName="contactNumber" />
-          <mat-error *ngIf="signUpForm.get('contactNumber')?.invalid">Enter a valid contact number</mat-error>
+          <mat-error *ngIf="signUpForm.get('contactNumber')?.invalid">
+            Enter a valid contact number
+          </mat-error>
         </mat-form-field>
-      </div>
-    </div>
+      </mat-grid-tile>
+    </mat-grid-list>
 
     <!-- Sign Up Button -->
-    <div class="apt-button">
-      <button mat-raised-button color="primary" type="submit">Sign Up</button>
+    <div class="button-container">
+      <button mat-raised-button color="primary" type="submit" [disabled]="signUpForm.invalid">
+        Sign Up
+      </button>
     </div>
   </form>
 </div>
 
 
-/* General margin and padding adjustments for form fields */
-.form-group {
-    margin-bottom: 20px; /* Adds space between form fields */
+
+
+
+import { Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+
+@Component({
+  selector: 'app-signup',
+  templateUrl: './signup.component.html',
+  styleUrls: ['./signup.component.css']
+})
+export class SignupComponent {
+  signUpForm: FormGroup;
+  hidePassword = true;
+
+  constructor(private fb: FormBuilder) {
+    this.signUpForm = this.fb.group({
+      firstName: ['', Validators.required],
+      lastName: ['', Validators.required],
+      email: ['', [Validators.required, Validators.email]],
+      userRole: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      confirmPassword: ['', Validators.required],
+      contactNumber: ['', Validators.required]
+    }, { validator: this.passwordMatchValidator });
   }
-  
-  /* Flexbox container to display the fields in two columns per row */
-  .form-row {
-    display: flex; /* Apply flexbox */
-    gap: 20px; /* Space between fields */
-    margin-bottom: 20px; /* Adds space below each row */
+
+  togglePasswordVisibility(): void {
+    this.hidePassword = !this.hidePassword;
   }
-  
-  /* Flex items (each form field) will take equal width */
-  .flex-item {
-    flex: 1; /* Makes each field take equal space */
+
+  passwordMatchValidator(form: FormGroup) {
+    return form.get('password')?.value === form.get('confirmPassword')?.value
+      ? null : { mismatch: true };
   }
-  
-  
-  
-  /* Styling for the button with increased specificity to override Bootstrap styles */
-  button {
-    margin-top: 20px;
-    margin-bottom: 80px; 
-    font-size: 18px; /* Increase font size */
-    padding: 12px 24px; /* Increase padding for a bigger button */
-    width: auto; /* Adjust width if you want it to take full width, or leave it as is */
+
+  submitSignUp() {
+    if (this.signUpForm.valid) {
+      console.log('Sign Up Form Data:', this.signUpForm.value);
+    }
   }
-  
-  /* Additional styling for the hover state (optional) */
-  button.btn.btn-primary:hover {
-    background-color: rgb(0, 55, 210) !important; /* Slightly darker shade on hover */
-    border-color: rgb(0, 55, 210) !important;
-  }
-  
-  .apt-button {
-    margin-top: auto; /* Pushes the button to the bottom */
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px; 
-  }
-  
-  .container {
-    width: 100%; /* Adjust to 100% for full width, or set a fixed width like '900px' */
-    max-width: 900px; /* Set max-width to limit the form size */
-    margin: 0 auto; /* Center the form */
-    padding: 20px; 
-    height: auto; /* Adjust height if needed, e.g., 80vh for 80% of the viewport height */
-  }
-  
- /* Ensure mat-form-field has relative positioning */
-mat-form-field {
-  position: relative; /* Necessary for the absolute positioning of the icon */
-  width: 100%; /* Ensure it fills the container */
 }
 
-/* Styling for the visibility icon button */
 
+
+
+.container {
+  max-width: 600px;
+  margin: 40px auto;
+  padding: 20px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+mat-grid-list {
+  width: 100%;
+}
+
+mat-grid-tile {
+  padding: 10px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+button {
+  padding: 12px 24px;
+  font-size: 16px;
+  width: 100%;
+}
+
+button:hover {
+  background-color: rgb(0, 55, 210) !important;
+  border-color: rgb(0, 55, 210) !important;
+}
 
 
