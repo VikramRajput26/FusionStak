@@ -1,0 +1,74 @@
+<!-- src/app/child/childregister.component.html -->
+<div class="container mt-5">
+  <h2>Child Registration</h2>
+  <form [formGroup]="childRegisterForm" (ngSubmit)="submitChildRegister()">
+    
+    <!-- First Row (First Name and Last Name Fields) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>First Name</mat-label>
+          <input matInput formControlName="firstName" />
+          <mat-hint>Enter the child's first name</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Last Name</mat-label>
+          <input matInput formControlName="lastName" />
+          <mat-hint>Enter the child's last name</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Second Row (Blood Type and Gender Fields) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Blood Type</mat-label>
+          <input matInput formControlName="bloodType" />
+          <mat-hint>Enter the child's blood type</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Gender</mat-label>
+          <mat-select formControlName="gender">
+            <mat-option value="Male">Male</mat-option>
+            <mat-option value="Female">Female</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Third Row (Date of Birth and User ID Fields) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Date of Birth</mat-label>
+          <input matInput [matDatepicker]="dobPicker" formControlName="dateOfBirth" />
+          <mat-datepicker-toggle matIconSuffix [for]="dobPicker"></mat-datepicker-toggle>
+          <mat-datepicker #dobPicker></mat-datepicker>
+          <mat-hint>MM/DD/YYYY</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>User ID</mat-label>
+          <input matInput formControlName="userId" type="number" />
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="apt-button">
+      <button type="submit" class="btn btn-primary" [disabled]="childRegisterForm.invalid">
+        Register Child
+      </button>
+    </div>
+    
+  </form>
+</div>

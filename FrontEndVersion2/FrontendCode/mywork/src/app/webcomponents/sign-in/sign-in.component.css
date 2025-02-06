@@ -1,0 +1,86 @@
+/* General container styling */
+.container {
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #fdfeff;
+    border-radius: 8px;
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  h2 {
+    text-align: center;
+    font-family: 'Roboto', sans-serif;
+    font-size: 24px;
+    margin-bottom: 20px;
+    color: #333;
+  }
+  
+  /* Styling for form group divs */
+  .form-group {
+    margin-bottom: 10px; /* Reduced bottom margin to control space */
+  }
+  
+  /* Styling for form fields */
+  mat-form-field {
+    width: 100%;
+    margin-bottom: 5px; /* Reduced margin between fields */
+  }
+  
+  mat-label {
+    font-family: 'Roboto', sans-serif;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  /* Styling for password field to ensure consistency */
+  mat-form-field .mat-input-element {
+    padding-right: 40px; /* Ensure space for the visibility button */
+  }
+  
+  /* Styling for password visibility icon button */
+  button[mat-icon-button] {
+    position: absolute;
+    right: 8px; /* Position the icon on the right */
+    top: 50%; /* Vertically center the icon */
+    transform: translateY(-50%); /* Correct vertical alignment */
+    z-index: 1; /* Ensure the icon stays on top of the input field */
+  }
+  
+  /* Submit Button Styling */
+  button[type='submit'] {
+    width: 100%;
+    background-color: #3f51b5;
+    color: white;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 12px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    text-align: center;
+     
+  }
+  
+  button[type='submit']:hover {
+    background-color: #303f9f;
+  }
+  
+  /* Button Disabled State */
+  button[type='submit'][disabled] {
+    background-color: #c5cae9;
+    cursor: not-allowed;
+  }
+  
+  /* Mobile responsiveness */
+  @media (max-width: 600px) {
+    .container {
+      padding: 20px;
+    }
+  
+    h2 {
+      font-size: 20px;
+    }
+  }
+  

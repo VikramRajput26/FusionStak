@@ -1,0 +1,54 @@
+.form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns */
+    gap: 16px; /* Space between the fields */
+    margin-bottom: 16px; /* Add space below the rows */
+    min-width: 600px;
+  }
+  
+  h2 {
+    text-align: center; /* Center the heading */
+    margin-bottom: 24px; /* Optional: Add some space below the heading */
+  }
+
+  .flex-item {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  button[mat-icon-button] {
+    position: absolute;
+    right: 8px; /* Position the icon on the right */
+    top: 50%; /* Vertically center the icon */
+    transform: translateY(-50%); /* Correct vertical alignment */
+    z-index: 1; /* Ensure the icon stays on top of the input field */
+  }
+  
+ 
+  
+  .apt-button {
+    text-align: center; /* Center the button */
+    margin-top: 24px; 
+    margin-bottom: 20px;
+  }
+  
+  .container {
+    display: flex;
+    width: 60%;
+    height: auto;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #fdfeff;
+    border-radius: 8px;
+    box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+    
+  }
+
+  .mat-form-field {
+    width: 100% !important; /* Ensure the mat-form-field takes up full width */
+  }
+  
+  .mat-input-element {
+    width: 100% !important; /* Ensure the input element takes up full width of the form field */
+  }
