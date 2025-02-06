@@ -1,0 +1,383 @@
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
+import { AppointmentService } from '../../services/appointment/appointment.service';
+import { CreateAppointmentDTO } from '../../services/appointment/appointment.model';
+import { Router } from '@angular/router';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatIconModule } from '@angular/material/icon';
+import { CommonModule } from '@angular/common';
+import { MatTimepickerModule } from '@angular/material/timepicker';  // Import MatTimepickerModule
+import { provideNativeDateAdapter } from '@angular/material/core';  // Import the DateAdapter provider
+
+@Component({
+  selector: 'app-appointment',
+  templateUrl: './appointment.component.html',
+  styleUrls: ['./appointment.component.css'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule, // Include MatSelectModule here
+    MatDatepickerModule,
+    MatIconModule,
+    MatTimepickerModule,  // Add MatTimepickerModule here
+  ],  
+  providers: [provideNativeDateAdapter()]  // Provide the Native DateAdapter here
+})
+export class AppointmentComponent implements OnInit {
+  appointmentForm: FormGroup;
+  appointmentStatuses = ['PENDING', 'SCHEDULED', 'COMPLETED', 'CANCELED'];
+  timeSlots: string[] = []; // Array to hold time slots
+  reasons = ['Consultation', 'Follow-up', 'Vaccination', 'Check-up']; // Example reasons
+
+  constructor(
+    private fb: FormBuilder,
+    private appointmentService: AppointmentService,
+    private toastr: ToastrService,
+    private router: Router
+  ) {
+    this.appointmentForm = this.fb.group({
+      reason: ['', [Validators.required]],
+      status: ['', [Validators.required]],
+      childId: ['', [Validators.required]],
+      doctorId: ['', [Validators.required]],
+      vaccineId: ['', [Validators.required]],
+      appointmentDate: ['', [Validators.required]],
+      appointmentTime: ['', [Validators.required]],
+    });
+  }
+
+  ngOnInit(): void {
+    // Generate time slots when the component is initialized
+    this.generateTimeSlots();
+  }
+
+  // Function to generate time slots from 9 AM to 6 PM with 30-minute intervals (AM/PM format)
+  generateTimeSlots() {
+    const startTime = 9; // 9 AM
+    const endTime = 18; // 6 PM
+    const interval = 30; // 30-minute interval
+    const slots: string[] = [];
+
+    for (let hour = startTime; hour < endTime; hour++) {
+      for (let minute = 0; minute < 60; minute += interval) {
+        const formattedTime = this.formatTime(hour, minute);
+        slots.push(formattedTime);
+      }
+    }
+
+    this.timeSlots = slots;
+  }
+
+  // Helper function to format time to 12-hour format with AM/PM
+  formatTime(hour: number, minute: number): string {
+    let period = 'AM';
+    let formattedHour = hour;
+
+    // Convert 24-hour time to 12-hour time and AM/PM
+    if (hour >= 12) {
+      period = 'PM';
+      if (hour > 12) {
+        formattedHour = hour - 12; // Convert 13-23 to 1-11 PM
+      }
+    } else if (hour === 0) {
+      formattedHour = 12; // Midnight case
+    }
+
+    // Format the minutes to be always 2 digits (e.g., '05' for 5 minutes)
+    const formattedMinute = minute < 10 ? `0${minute}` : `${minute}`;
+
+    // Return formatted time (e.g., 09:30 AM or 03:00 PM)
+    return `${this.formatTimeUnit(formattedHour)}:${formattedMinute} ${period}`;
+  }
+
+  // Helper function to format single digit hour to double digit (e.g., 9 to 09)
+  formatTimeUnit(time: number): string {
+    return time < 10 ? `0${time}` : `${time}`;
+  }
+
+  // Submit the appointment form
+  submitAppointment(): void {
+    console.log("Button clicked, submitAppointment called");
+    
+    if (this.appointmentForm.invalid) {
+      this.toastr.error('Please fill all fields correctly!', 'Error');
+      console.log('Form is invalid:', this.appointmentForm.valid); // Debugging line
+       return;
+    }
+
+    const newAppointment: CreateAppointmentDTO = {
+      reason: this.appointmentForm.value.reason,
+      status: this.appointmentForm.value.status,
+      childId: this.appointmentForm.value.childId,
+      doctorId: this.appointmentForm.value.doctorId,
+      vaccineId: this.appointmentForm.value.vaccineId,
+      appointmentDate: this.appointmentForm.value.appointmentDate,
+      appointmentTime: this.appointmentForm.value.appointmentTime,
+    };
+
+    this.appointmentService.createAppointment(newAppointment).subscribe(
+      (response) => {
+        console.log('Appointment created successfully:', response); // Debugging line
+        this.toastr.success('Appointment created successfully!', 'Success');
+        this.router.navigate(['/home']); // Redirect to home or appointment list
+      },
+      (error) => {
+        console.error('Error creating appointment:', error);
+        this.toastr.error('Creation failed: ' + error.message, 'Error');
+      }
+    );
+    
+  }
+}
+<!-- appointment.component.html -->
+<div class="container mt-5">
+  <h2>Appointment Registration</h2>
+  <form [formGroup]="appointmentForm" (ngSubmit)="submitAppointment()">
+    
+    <!-- First Row (Reason and Status Fields) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Reason</mat-label>
+          <mat-select formControlName="reason">
+            <mat-option *ngFor="let reason of reasons" [value]="reason">
+              {{ reason }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Choose the reason for the appointment</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Status</mat-label>
+          <mat-select formControlName="status">
+            <mat-option *ngFor="let status of appointmentStatuses" [value]="status">
+              {{ status }}
+            </mat-option>
+          </mat-select>
+          <mat-hint>Choose the status of the appointment</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Second Row (Child ID and Doctor ID Fields) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Child ID</mat-label>
+          <input matInput formControlName="childId" type="number" />
+          <mat-hint>Enter the child ID</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Doctor ID</mat-label>
+          <input matInput formControlName="doctorId" type="number" />
+          <mat-hint>Enter the doctor ID</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Third Row (Vaccine ID Field) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Vaccine ID</mat-label>
+          <input matInput formControlName="vaccineId" type="number" />
+          <mat-hint>Enter the vaccine ID</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Fourth Row (Date and Time Fields) -->
+    <div class="form-row">
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Appointment Date</mat-label>
+          <input matInput [matDatepicker]="picker" formControlName="appointmentDate" />
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+          <mat-hint>MM/DD/YYYY</mat-hint>
+        </mat-form-field>
+      </div>
+
+      <div class="form-group flex-item">
+        <mat-form-field appearance="fill" class="example-full-width">
+          <mat-label>Appointment Time</mat-label>
+          <mat-select formControlName="appointmentTime">
+            <mat-option *ngFor="let time of timeSlots" [value]="time">
+              {{ time }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="apt-button">
+      <button type="submit" type="button" class="btn btn-primary" [disabled]="appointmentForm.invalid">
+        Create Appointment
+      </button>
+    </div>
+    
+  </form>
+</div>
+/* General margin and padding adjustments for form fields */
+.form-group {
+  margin-bottom: 20px; /* Adds space between form fields */
+}
+
+/* Flexbox container to display the fields in two columns per row */
+.form-row {
+  display: flex; /* Apply flexbox */
+  gap: 20px; /* Space between fields */
+  margin-bottom: 20px; /* Adds space below each row */
+}
+
+/* Flex items (each form field) will take equal width */
+.flex-item {
+  flex: 1; /* Makes each field take equal space */
+}
+
+/* Adjust the height of the date picker toggle button */
+mat-datepicker-toggle {
+  height: 1.2cm;
+}
+
+/* Styling adjustments for labels and inputs */
+mat-form-field {
+  width: 100%; /* Ensure full width for each field */
+}
+
+/* Styling for the button with increased specificity to override Bootstrap styles */
+button{
+  margin-top: 20px;
+  margin-bottom: 80px; 
+  font-size: 18px; /* Increase font size */
+  padding: 12px 24px; /* Increase padding for a bigger button */
+  width: auto; /* Adjust width if you want it to take full width, or leave it as is */
+}
+
+/* Additional styling for the hover state (optional) */
+button.btn.btn-primary:hover {
+  background-color: rgb(0, 55, 210) !important; /* Slightly darker shade on hover */
+  border-color: rgb(0, 55, 210) !important;
+}
+
+
+.apt-button {
+  margin-top: auto; /* Pushes the button to the bottom */
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px; 
+}
+
+.container {
+  width: 100%; /* Adjust to 100% for full width, or set a fixed width like '900px' */
+  max-width: 900px; /* Set max-width to limit the form size */
+  margin: 0 auto; /* Center the form */
+  padding: 20px; 
+  height: auto; /* Adjust height if needed, e.g., 80vh for 80% of the viewport height */
+}// src/app/appointment/appointment.model.ts
+export interface AppointmentDTO {
+  appointmentId: number;
+  reason: string;
+  status: 'PENDING'|'SCHEDULED'|'COMPLETED'|'CANCELED';
+  childId: number;
+  doctorId: number;
+  vaccineId: number;
+  appointmentDate: string;
+  appointmentTime: string;
+}
+
+export interface CreateAppointmentDTO {
+  reason: string;
+  status: 'PENDING'|'SCHEDULED'|'COMPLETED'|'CANCELED';
+  childId: number;
+  doctorId: number;
+  vaccineId: number;
+  appointmentDate: string;
+  appointmentTime: string;
+}
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, throwError } from 'rxjs';  // Correct import for throwError and Observable
+import { catchError } from 'rxjs/operators';    // Import catchError from rxjs/operators
+import { environment } from '../../../environment/environment';
+import { AppointmentDTO, CreateAppointmentDTO } from './appointment.model';
+
+@Injectable({
+  providedIn: 'root',
+})
+export class AppointmentService {
+  private apiUrl = `${environment.apiUrl}/Appointment`; // Base URL for the API
+
+  constructor(private http: HttpClient) {}
+
+  // Get all appointments
+  getAppointments(): Observable<AppointmentDTO[]> {
+    return this.http.get<AppointmentDTO[]>(`${this.apiUrl}/getallapt`).pipe(
+      catchError((error) => {
+        console.error('Error occurred while fetching appointments:', error);
+        return throwError(() => new Error('Error fetching appointments'));  // Corrected error handling
+      })
+    );
+  }
+
+  // Get an appointment by ID
+  getAppointmentById(id: number): Observable<AppointmentDTO> {
+    return this.http.get<AppointmentDTO>(`${this.apiUrl}/getbyid/${id}`).pipe(
+      catchError((error) => {
+        console.error('Error occurred while fetching appointment by ID:', error);
+        return throwError(() => new Error('Error fetching appointment by ID'));
+      })
+    );
+  }
+
+  // Create a new appointment
+  createAppointment(appointment: CreateAppointmentDTO): Observable<AppointmentDTO> {
+    console.log('Creating appointment with data:', appointment); // Debugging line
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+    });
+    return this.http.post<AppointmentDTO>(`${this.apiUrl}/addapt`, appointment, { headers }).pipe(
+      catchError((error) => {
+        console.error('Error occurred while creating appointment:', error);
+        return throwError(() => new Error('Error creating appointment'));
+      })
+    );
+  }
+  
+
+  // Update an existing appointment
+  updateAppointment(id: number, appointment: AppointmentDTO): Observable<AppointmentDTO> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+    });
+    return this.http.put<AppointmentDTO>(`${this.apiUrl}/updateapt/${id}`, appointment, { headers }).pipe(
+      catchError((error) => {
+        console.error('Error occurred while updating appointment:', error);
+        return throwError(() => new Error('Error updating appointment'));
+      })
+    );
+  }
+
+  // Delete an appointment by ID
+  deleteAppointment(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/delete/${id}`).pipe(
+      catchError((error) => {
+        console.error('Error occurred while deleting appointment:', error);
+        return throwError(() => new Error('Error deleting appointment'));
+      })
+    );
+  }
+}
