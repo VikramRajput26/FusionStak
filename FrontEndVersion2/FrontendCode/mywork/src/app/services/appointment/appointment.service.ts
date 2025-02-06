@@ -1,12 +1,9 @@
-
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, throwError } from 'rxjs';  // Correct import for throwError and Observable
+import { catchError } from 'rxjs/operators';    // Import catchError from rxjs/operators
 import { environment } from '../../../environment/environment';
 import { AppointmentDTO, CreateAppointmentDTO } from './appointment.model';
-import { catchError } from 'rxjs/operators';
-import { throwError } from 'rxjs';
-
 
 @Injectable({
   providedIn: 'root',
@@ -18,23 +15,33 @@ export class AppointmentService {
 
   // Get all appointments
   getAppointments(): Observable<AppointmentDTO[]> {
-    return this.http.get<AppointmentDTO[]>(`${this.apiUrl}/getallapt`);
+    return this.http.get<AppointmentDTO[]>(`${this.apiUrl}/getallapt`).pipe(
+      catchError((error) => {
+        console.error('Error occurred while fetching appointments:', error);
+        return throwError(() => new Error('Error fetching appointments'));  // Corrected error handling
+      })
+    );
   }
 
   // Get an appointment by ID
   getAppointmentById(id: number): Observable<AppointmentDTO> {
-    return this.http.get<AppointmentDTO>(`${this.apiUrl}/getbyid/${id}`);
+    return this.http.get<AppointmentDTO>(`${this.apiUrl}/getbyid/${id}`).pipe(
+      catchError((error) => {
+        console.error('Error occurred while fetching appointment by ID:', error);
+        return throwError(() => new Error('Error fetching appointment by ID'));
+      })
+    );
   }
 
-  // Create a new appointment
-  createAppointment(appointment: CreateAppointmentDTO): Observable<AppointmentDTO> {
+  createAppointment(appointment: CreateAppointmentDTO): Observable<any> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
     });
-    return this.http.post<AppointmentDTO>(`${this.apiUrl}/addapt`, appointment, { headers }).pipe(
+
+    return this.http.post<any>(`${this.apiUrl}/addapt`, appointment, { headers }).pipe(
       catchError((error) => {
-        console.error('Error from backend:', error);
-        return throwError(error); // Propagate error to component
+        console.error('Error occurred while creating appointment:', error);
+        return throwError(() => new Error('Error creating appointment'));
       })
     );
   }
@@ -45,11 +52,21 @@ export class AppointmentService {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
     });
-    return this.http.put<AppointmentDTO>(`${this.apiUrl}/updateapt/${id}`, appointment, { headers });
+    return this.http.put<AppointmentDTO>(`${this.apiUrl}/updateapt/${id}`, appointment, { headers }).pipe(
+      catchError((error) => {
+        console.error('Error occurred while updating appointment:', error);
+        return throwError(() => new Error('Error updating appointment'));
+      })
+    );
   }
 
   // Delete an appointment by ID
   deleteAppointment(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/delete/${id}`);
+    return this.http.delete<void>(`${this.apiUrl}/delete/${id}`).pipe(
+      catchError((error) => {
+        console.error('Error occurred while deleting appointment:', error);
+        return throwError(() => new Error('Error deleting appointment'));
+      })
+    );
   }
 }

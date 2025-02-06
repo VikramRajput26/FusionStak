@@ -8,6 +8,25 @@ export interface SignUpRequest {
   contactNumber: string;
 }
 
+export interface UserDTO {
+  userId : number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  userRole: 'USER' | 'ADMIN';
+  contactNumber: string;
+}
+
+export interface UpdateUserDTO {
+  userId : number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  userRole: 'USER' | 'ADMIN';
+  contactNumber: string;
+}
+
 export interface SignInRequest {
   username: string;
   password: string;

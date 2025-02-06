@@ -9,7 +9,9 @@ import { AuthComponent } from './services/auth/auth.component';
 import { ChildregisterComponent } from './webcomponents/childregister/childregister.component';
 import { AppointmentComponent } from './webcomponents/appointment/appointment.component';
 import { SignUpComponent } from './webcomponents/sign-up/sign-up.component';
-import { UserComponent } from './webcomponents/user/user.component';
+
+import { UserTableComponent } from './webcomponents/user-table/user-table.component';
+import { ChildTableComponent } from './webcomponents/child-table/child-table.component';
 
 
 export const routes: Routes = [
@@ -22,5 +24,7 @@ export const routes: Routes = [
   { path: 'signup', component: SignUpComponent },
   { path: 'childregister', component: ChildregisterComponent },
   { path: 'appointment', component: AppointmentComponent },
+  { path: 'usertable', component: UserTableComponent },
+  { path: 'childtable', component: ChildTableComponent },
   { path: '**', component: PageNotFoundComponentComponent },
 ];

@@ -23,18 +23,18 @@ import { provideNativeDateAdapter } from '@angular/material/core';  // Import th
     ReactiveFormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule, // Include MatSelectModule here
+    MatSelectModule,
     MatDatepickerModule,
     MatIconModule,
-    MatTimepickerModule,  // Add MatTimepickerModule here
+    MatTimepickerModule,  
   ],  
-  providers: [provideNativeDateAdapter()]  // Provide the Native DateAdapter here
+  providers: [provideNativeDateAdapter()]  
 })
 export class AppointmentComponent implements OnInit {
   appointmentForm: FormGroup;
   appointmentStatuses = ['PENDING', 'SCHEDULED', 'COMPLETED', 'CANCELED'];
-  timeSlots: string[] = []; // Array to hold time slots
-  reasons = ['Consultation', 'Follow-up', 'Vaccination', 'Check-up']; // Example reasons
+  timeSlots: string[] = []; 
+  reasons = ['Consultation', 'Follow-up', 'Vaccination', 'Check-up']; 
 
   constructor(
     private fb: FormBuilder,
@@ -54,15 +54,15 @@ export class AppointmentComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    // Generate time slots when the component is initialized
+   
     this.generateTimeSlots();
   }
 
-  // Function to generate time slots from 9 AM to 6 PM with 30-minute intervals (AM/PM format)
+  
   generateTimeSlots() {
-    const startTime = 9; // 9 AM
-    const endTime = 18; // 6 PM
-    const interval = 30; // 30-minute interval
+    const startTime = 9; 
+    const endTime = 18; 
+    const interval = 30; 
     const slots: string[] = [];
 
     for (let hour = startTime; hour < endTime; hour++) {
@@ -75,38 +75,40 @@ export class AppointmentComponent implements OnInit {
     this.timeSlots = slots;
   }
 
-  // Helper function to format time to 12-hour format with AM/PM
+ 
   formatTime(hour: number, minute: number): string {
     let period = 'AM';
     let formattedHour = hour;
 
-    // Convert 24-hour time to 12-hour time and AM/PM
     if (hour >= 12) {
       period = 'PM';
       if (hour > 12) {
-        formattedHour = hour - 12; // Convert 13-23 to 1-11 PM
+        formattedHour = hour - 12; 
       }
     } else if (hour === 0) {
-      formattedHour = 12; // Midnight case
+      formattedHour = 12; 
     }
 
-    // Format the minutes to be always 2 digits (e.g., '05' for 5 minutes)
+    
     const formattedMinute = minute < 10 ? `0${minute}` : `${minute}`;
 
-    // Return formatted time (e.g., 09:30 AM or 03:00 PM)
+    
     return `${this.formatTimeUnit(formattedHour)}:${formattedMinute} ${period}`;
   }
 
-  // Helper function to format single digit hour to double digit (e.g., 9 to 09)
+ 
   formatTimeUnit(time: number): string {
     return time < 10 ? `0${time}` : `${time}`;
   }
 
-  // Submit the appointment form
+ 
   submitAppointment(): void {
+    console.log("Button clicked, submitAppointment called");
+    
     if (this.appointmentForm.invalid) {
       this.toastr.error('Please fill all fields correctly!', 'Error');
-      return;
+      console.log('Form is invalid:', this.appointmentForm.valid);
+       return;
     }
 
     const newAppointment: CreateAppointmentDTO = {
@@ -120,13 +122,14 @@ export class AppointmentComponent implements OnInit {
     };
 
     this.appointmentService.createAppointment(newAppointment).subscribe(
-      (response) => {
+      (response) => {  
         this.toastr.success('Appointment created successfully!', 'Success');
-        this.router.navigate(['/home']); // Redirect to home or appointment list
+        this.router.navigate(['/home']); 
       },
       (error) => {
         this.toastr.error('Creation failed: ' + error.message, 'Error');
       }
     );
+    
   }
 }
